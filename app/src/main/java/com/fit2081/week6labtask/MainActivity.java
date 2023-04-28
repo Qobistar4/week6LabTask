@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
@@ -23,6 +25,7 @@ import android.widget.Toast;
 import android.util.Log;
 import android.content.SharedPreferences;
 
+import com.fit2081.week6labtask.provider.Book;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -30,6 +33,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import androidx.lifecycle.ViewModelProvider;
+import com.fit2081.week6labtask.provider.BookViewModel;
 
 public class MainActivity extends AppCompatActivity  /*implements TokenizerInterface*/ {
 
@@ -44,12 +49,18 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
     public static final String LIFE_CYCLE = "LifeCycle";
     EditText bookIDET, bookNameET, bookISBNET, bookMakerET, bookDesET, bookPriceET;
     SharedPreferences sharedPreferences;
-    ArrayList<String> bookList = new ArrayList<>();
-    ArrayAdapter<String> adapter;
-    private ListView myListView;
+    //ArrayList<Item> bookList = new ArrayList<>();
+    ArrayList<Book> bookList = new ArrayList<>();
+    //ArrayAdapter<String> adapter;
+    RecyclerView recyclerView;
+    RecyclerView.LayoutManager layoutManager;
+    MyAdapter adapter;
+    //private ListView myListView;
     private DrawerLayout drawerlayout;
     private NavigationView navigationView;
     Toolbar toolbar;
+    private BookViewModel bookViewModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,7 +79,20 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
 
         navigationView.setNavigationItemSelectedListener(new MyNavigationListener());
 
+        recyclerView = findViewById(R.id.my_recycler_view);
 
+        layoutManager = new LinearLayoutManager(this);
+        //A RecyclerView.LayoutManager implementation which provides similar functionality to ListView.
+        recyclerView.setLayoutManager(layoutManager);
+        // Also StaggeredGridLayoutManager and GridLayoutManager or a custom Layout manager
+        adapter = new MyAdapter(bookList);
+        recyclerView.setAdapter(adapter);
+
+        bookViewModel = new ViewModelProvider(this).get(BookViewModel.class);
+        bookViewModel.getAllBooks().observe(this,books -> {
+            adapter.setBooks(books);
+            adapter.notifyDataSetChanged();
+        });
         bookIDET    = findViewById(R.id.bookIDET);
         bookNameET  = findViewById(R.id.bookNameET);
         bookISBNET  = findViewById(R.id.bookISBNET);
@@ -76,10 +100,10 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
         bookDesET   = findViewById(R.id.bookDesET);
         bookPriceET = findViewById(R.id.BookPriceET);
 
-        myListView =  findViewById(R.id.list_view);
+        //myListView =  findViewById(R.id.list_view);
 
-        adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, bookList);
-        myListView.setAdapter(adapter);
+        //adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, bookList);
+        //myListView.setAdapter(adapter);
 
         /*Log.d(LIFE_CYCLE,"onCreate");
          * */
@@ -130,9 +154,9 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
 
                 editor.apply();
 
-                String bookListText = bookName + " | " + df.format(price);
-                bookList.add(bookListText);
-
+                //String bookListText = bookName + " | " + df.format(price);
+                //bookList.add(bookListText);
+                addBook();
                 adapter.notifyDataSetChanged();
 
             }
@@ -157,6 +181,7 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
         SMSReceiver receiver = new SMSReceiver(this);
         registerReceiver(receiver,filter);*/
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -278,24 +303,47 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
 
                 editor.apply();
 
-                String bookListText = bookName + " | " + df.format(price);
-                bookList.add(bookListText);
+                //String bookListText = bookName + " | " + df.format(price);
+                //bookList.add(bookListText);
+                addBook();
 
                 adapter.notifyDataSetChanged();
 
-            } else if (id == R.id.remove_last_book_menuNav_id) {
+            }
+            else if (id == R.id.remove_last_book_menuNav_id) {
 
                 bookList.remove(bookList.size() -1);
-                adapter.notifyDataSetChanged();
-            } else if (id == R.id.remove_all_books_menuNav_id) {
-                bookList.clear();
+                bookViewModel.deleteLastBook();
                 adapter.notifyDataSetChanged();
             }
+            else if (id == R.id.remove_all_books_menuNav_id) {
+                bookList.clear();
+                bookViewModel.deleteAll();
+                adapter.notifyDataSetChanged();
+            }
+            else  if (id == R.id.delete_books_lower_than_100) {
+                bookViewModel.delete100();
+            }
+
             // close the drawer
             drawerlayout.closeDrawers();
             // tell the OS
             return true;
         }
+    }
+    public void addBook() {
+        String bookID = bookIDET.getText().toString();
+        String bookName = bookNameET.getText().toString();
+        String bookISBN = bookISBNET.getText().toString();
+        String bookMaker = bookMakerET.getText().toString();
+        String bookDes = bookDesET.getText().toString();
+        float price = Float.parseFloat(bookPriceET.getText().toString());
+
+        Book newBook = new Book (bookID, bookName, bookISBN, bookMaker, bookDes, price);
+        bookViewModel.insert(newBook);
+        bookList.add(newBook);
+
+        adapter.notifyDataSetChanged();
     }
     public void handleReload(View v){
 

@@ -9,4 +9,7 @@
     <item
         android:id="@+id/remove_all_books_menuNav_id"
         android:title="Remove All Books" />
+    <item
+        android:id="@+id/delete_books_lower_than_100"
+        android:title="Delete books lower than 100" />
 </menu>
