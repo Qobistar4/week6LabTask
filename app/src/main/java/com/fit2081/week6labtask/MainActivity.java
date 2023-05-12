@@ -1,6 +1,7 @@
 package com.fit2081.week6labtask;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -18,12 +19,12 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.view.MotionEvent;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.Toast;
 import android.util.Log;
 import android.content.SharedPreferences;
+import androidx.core.view.MotionEventCompat;
 
 import com.fit2081.week6labtask.provider.Book;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -35,6 +36,11 @@ import java.util.StringTokenizer;
 
 import androidx.lifecycle.ViewModelProvider;
 import com.fit2081.week6labtask.provider.BookViewModel;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity  /*implements TokenizerInterface*/ {
 
@@ -54,17 +60,56 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
     //ArrayAdapter<String> adapter;
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
-    MyAdapter adapter;
+    static MyAdapter adapter;
     //private ListView myListView;
     private DrawerLayout drawerlayout;
     private NavigationView navigationView;
     Toolbar toolbar;
     private BookViewModel bookViewModel;
-
+    DatabaseReference mRef;
+    DatabaseReference mTable;
+    float startX, startY, endX, endY;
+    float activityWidth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.drawer_layout);
+        View view=findViewById(R.id.frame_layout_id);
+        activityWidth = getResources().getDisplayMetrics().widthPixels * 0.25f;
+
+        //        Firebase
+        mRef= FirebaseDatabase.getInstance().getReference();
+        mTable = mRef.child("week8/status");
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        mRef = database.getReference("week8task/fit2081");
+        mRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                bookList.add(dataSnapshot.getValue(Book.class));
+                adapter.notifyDataSetChanged();
+                // recyclerView.scrollToPosition(bookList.size()-1);
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
         drawerlayout = findViewById(R.id.drawer_layout);
         toolbar = findViewById(R.id.toolbar);
@@ -79,14 +124,14 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
 
         navigationView.setNavigationItemSelectedListener(new MyNavigationListener());
 
-        recyclerView = findViewById(R.id.my_recycler_view);
+        //recyclerView = findViewById(R.id.my_recycler_view);
 
-        layoutManager = new LinearLayoutManager(this);
+        //layoutManager = new LinearLayoutManager(this);
         //A RecyclerView.LayoutManager implementation which provides similar functionality to ListView.
-        recyclerView.setLayoutManager(layoutManager);
+        //recyclerView.setLayoutManager(layoutManager);
         // Also StaggeredGridLayoutManager and GridLayoutManager or a custom Layout manager
         adapter = new MyAdapter(bookList);
-        recyclerView.setAdapter(adapter);
+        //recyclerView.setAdapter(adapter);
 
         bookViewModel = new ViewModelProvider(this).get(BookViewModel.class);
         bookViewModel.getAllBooks().observe(this,books -> {
@@ -128,6 +173,7 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
         } else {
             bookPriceET.setText(df.format(SPBookPrice));
         }
+
         FloatingActionButton fab = findViewById(R.id.fab);
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -153,10 +199,13 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
                 editor.putFloat (SP_PRICE,price);
 
                 editor.apply();
+                Book newBook = new Book (bookID, bookName, bookISBN, bookMaker, bookDes, price);
+                mTable.push().setValue(newBook);
 
                 //String bookListText = bookName + " | " + df.format(price);
                 //bookList.add(bookListText);
                 addBook();
+
                 adapter.notifyDataSetChanged();
 
             }
@@ -180,9 +229,98 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
         filter.addAction("android.provider.Telephony.SMS_RECEIVED");
         SMSReceiver receiver = new SMSReceiver(this);
         registerReceiver(receiver,filter);*/
+        getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout_id2, new BookListsFragment()).commit();
+        view.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+
+
+                int action = event.getActionMasked();
+
+                switch(action) {
+                    case (MotionEvent.ACTION_DOWN) :
+                        startX = event.getX();
+                        startY = event.getY();
+                        return true;
+                    case (MotionEvent.ACTION_MOVE) :
+                        return true;
+                    case (MotionEvent.ACTION_UP) :
+                        endX = event.getX();
+                        endY = event.getY();
+
+                        float deltaX = endX - startX;
+                        float deltaY = endY - startY;
+
+                        if(Math.abs(deltaX) > Math.abs(deltaY)) {
+                            // Horizontal swipe
+                            if(Math.abs(deltaX) > activityWidth) {
+                                if(deltaX > 0) {
+                                    // Right swipe
+                                    // Task 2: Add one dollar to the book's price
+                                    float price = Float.parseFloat(bookPriceET.getText().toString());
+                                    DecimalFormat df = new DecimalFormat(".00");
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    float newPrice = price+1;
+
+                                    editor.putFloat (SP_PRICE,newPrice);
+
+                                    editor.apply();
+                                    bookPriceET.setText(df.format(newPrice));
+
+                                } else {
+                                    // Left swipe
+                                    // Task 1: Add a new Book to the database
+                                    String bookID = bookIDET.getText().toString();
+                                    String bookName = bookNameET.getText().toString();
+                                    String bookISBN = bookISBNET.getText().toString();
+                                    String bookMaker = bookMakerET.getText().toString();
+                                    String bookDes = bookDesET.getText().toString();
+                                    float price = Float.parseFloat(bookPriceET.getText().toString());
+                                    DecimalFormat df = new DecimalFormat(".00");
+
+                                    Toast.makeText(MainActivity.this, "Book (" + bookName + ")" + " and the price (" + df.format(price) + ")", Toast.LENGTH_SHORT).show();
+
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                                    editor.putString(SP_ID,bookID);
+                                    editor.putString(SP_NAME,bookName);
+                                    editor.putString(SP_ISBN,bookISBN);
+                                    editor.putString(SP_AUTHOR,bookMaker);
+                                    editor.putString(SP_DESCRIPTION,bookDes);
+                                    editor.putFloat (SP_PRICE,price);
+
+                                    editor.apply();
+                                    Book newBook = new Book (bookID, bookName, bookISBN, bookMaker, bookDes, price);
+                                    mTable.push().setValue(newBook);
+
+                                    addBook();
+
+                                    adapter.notifyDataSetChanged();
+                                }
+                            }
+                        } else {
+                            // Vertical swipe
+                            if(Math.abs(deltaY) > activityWidth) {
+                                if(deltaY < 0) {
+                                    // Up swipe
+                                    // Task 3: Clear all the fields
+                                    bookIDET.setText("");
+                                    bookNameET.setText("");
+                                    bookISBNET.setText("");
+                                    bookMakerET.setText("");
+                                    bookDesET.setText("");
+                                    bookPriceET.setText("");
+                                }
+                            }
+                        }
+                        return true;
+                    default :
+                        return false;
+                }
+            }
+        });
     }
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.option_menu, menu);
@@ -306,23 +444,26 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
                 //String bookListText = bookName + " | " + df.format(price);
                 //bookList.add(bookListText);
                 addBook();
-
+                Book newBook = new Book (bookID, bookName, bookISBN, bookMaker, bookDes, price);
+                mTable.push().setValue(newBook);
                 adapter.notifyDataSetChanged();
 
             }
             else if (id == R.id.remove_last_book_menuNav_id) {
 
-                bookList.remove(bookList.size() -1);
-                bookViewModel.deleteLastBook();
-                adapter.notifyDataSetChanged();
+                    bookList.remove(bookList.size() -1);
+                    bookViewModel.deleteLastBook();
+                    adapter.notifyDataSetChanged();
+
             }
             else if (id == R.id.remove_all_books_menuNav_id) {
-                bookList.clear();
-                bookViewModel.deleteAll();
-                adapter.notifyDataSetChanged();
-            }
-            else  if (id == R.id.delete_books_lower_than_100) {
-                bookViewModel.delete100();
+
+                    bookList.clear();
+                    bookViewModel.deleteAll();
+                    adapter.notifyDataSetChanged();
+
+            } else if (id == R.id.list_all_books_menuNav_id) {
+                startActivity(new Intent(getApplicationContext(), ListBookActivity.class));
             }
 
             // close the drawer
@@ -345,6 +486,8 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
 
         adapter.notifyDataSetChanged();
     }
+
+
     public void handleReload(View v){
 
         String SPBookID = sharedPreferences.getString(SP_ID,"");

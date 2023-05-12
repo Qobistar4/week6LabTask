@@ -8,14 +8,14 @@
     android:layout_margin="5dp"
     android:clickable="true"
     android:foreground="?selectableItemBackground"
-    card_view:cardBackgroundColor="@android:color/holo_blue_dark"
+    card_view:cardBackgroundColor="@android:color/holo_blue_light"
     card_view:cardCornerRadius="12dp"
     card_view:cardElevation="3dp"
     card_view:contentPadding="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="90dp">
 
 
         <TextView
@@ -35,20 +35,19 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             card_view:layout_constraintEnd_toEndOf="parent"
-            card_view:layout_constraintTop_toTopOf="parent"
             card_view:layout_constraintStart_toEndOf="@+id/item_ID"
-            />
+            card_view:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/item_Author"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
             card_view:layout_constraintEnd_toStartOf="@+id/item_ISBN"
             card_view:layout_constraintHorizontal_bias="0.5"
             card_view:layout_constraintStart_toStartOf="parent"
-            card_view:layout_constraintTop_toBottomOf="@+id/item_ID"/>
+            card_view:layout_constraintTop_toBottomOf="@+id/item_ID" />
 
 
         <TextView
@@ -60,7 +59,7 @@
             card_view:layout_constraintEnd_toEndOf="parent"
             card_view:layout_constraintHorizontal_bias="0.5"
             card_view:layout_constraintStart_toEndOf="@+id/item_Author"
-            card_view:layout_constraintTop_toBottomOf="@+id/item_Title"/>
+            card_view:layout_constraintTop_toBottomOf="@+id/item_Title" />
 
         <TextView
             android:id="@+id/item_Desc"
@@ -78,8 +77,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            card_view:layout_constraintStart_toEndOf="@+id/item_Desc"
             card_view:layout_constraintEnd_toEndOf="parent"
+            card_view:layout_constraintStart_toEndOf="@+id/item_Desc"
             card_view:layout_constraintTop_toBottomOf="@+id/item_ISBN" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 

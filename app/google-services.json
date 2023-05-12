@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "67443042327",
+    "firebase_url": "https://week8task-default-rtdb.firebaseio.com",
+    "project_id": "week8task",
+    "storage_bucket": "week8task.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:67443042327:android:0ed3072e8d3482ac5b9452",
+        "android_client_info": {
+          "package_name": "com.fit2081.week6labtask"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "67443042327-f044hb8u6un2rcs8qogtp60ubu309uhe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9BMX460drqLztO927IS6v7L5ZU1FAN4E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "67443042327-f044hb8u6un2rcs8qogtp60ubu309uhe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

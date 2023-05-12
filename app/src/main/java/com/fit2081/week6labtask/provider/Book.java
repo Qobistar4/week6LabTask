@@ -30,8 +30,8 @@ public class Book {
     @ColumnInfo(name = "BookPrice")
     private float price;
 
-    public Book(String id, String title, String author, String isbn, String description, float price) {
-        this.registerID= idCounter++;
+    public Book(String id, String title,  String isbn, String author, String description, float price) {
+     //   this.registerID= idCounter++;
         this.id = id;
         this.title = title;
         this.author = author;
