@@ -71,6 +71,8 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
     float startX, startY, endX, endY;
     //float activityWidth;
     public static final int SWIPE_THRESHOLD = 200;
+    public static final int DIAGONAL_SWIPE_THRESHOLD = SWIPE_THRESHOLD * 2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -231,6 +233,7 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
         SMSReceiver receiver = new SMSReceiver(this);
         registerReceiver(receiver,filter);*/
         getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout_id2, new BookListsFragment()).commit();
+
         view.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -251,7 +254,19 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
                         float deltaX = endX - startX;
                         float deltaY = endY - startY;
 
-                        if(Math.abs(deltaX) > Math.abs(deltaY)) {
+                        // Diagonal swipe from top-left to bottom-right
+                        if(deltaX > 0 && deltaY > 0 && Math.abs(deltaX - deltaY) < DIAGONAL_SWIPE_THRESHOLD) {
+                            // Subtract one dollar from the book's price
+                            float price = Float.parseFloat(bookPriceET.getText().toString());
+                            DecimalFormat df = new DecimalFormat(".00");
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            float newPrice = price+1;
+
+                            editor.putFloat (SP_PRICE,newPrice);
+                            editor.apply();
+                            bookPriceET.setText(df.format(newPrice));
+                        }
+                        else if(Math.abs(deltaX) > Math.abs(deltaY)) {
                             // Horizontal swipe
                             if(Math.abs(deltaX) > SWIPE_THRESHOLD) {
                                 if(deltaX > 0) {
@@ -317,6 +332,8 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
                 }
             }
         });
+
+
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
