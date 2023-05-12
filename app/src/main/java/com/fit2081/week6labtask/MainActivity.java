@@ -69,13 +69,14 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
     DatabaseReference mRef;
     DatabaseReference mTable;
     float startX, startY, endX, endY;
-    float activityWidth;
+    //float activityWidth;
+    public static final int SWIPE_THRESHOLD = 200;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.drawer_layout);
         View view=findViewById(R.id.frame_layout_id);
-        activityWidth = getResources().getDisplayMetrics().widthPixels * 0.25f;
+        //activityWidth = getResources().getDisplayMetrics().widthPixels * 0.25f;
 
         //        Firebase
         mRef= FirebaseDatabase.getInstance().getReference();
@@ -252,7 +253,7 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
 
                         if(Math.abs(deltaX) > Math.abs(deltaY)) {
                             // Horizontal swipe
-                            if(Math.abs(deltaX) > activityWidth) {
+                            if(Math.abs(deltaX) > SWIPE_THRESHOLD) {
                                 if(deltaX > 0) {
                                     // Right swipe
                                     // Task 2: Add one dollar to the book's price
@@ -297,7 +298,7 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
                             }
                         } else {
                             // Vertical swipe
-                            if(Math.abs(deltaY) > activityWidth) {
+                            if(Math.abs(deltaY) > SWIPE_THRESHOLD) {
                                 if(deltaY < 0) {
                                     // Up swipe
                                     // Task 3: Clear all the fields
