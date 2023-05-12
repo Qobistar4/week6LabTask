@@ -11,7 +11,6 @@ import androidx.room.PrimaryKey;
 public class Book {
 
     public static final String TABLE_NAME = "books";
-    private static int idCounter = 1;
 
     @PrimaryKey(autoGenerate = true)
     @NonNull

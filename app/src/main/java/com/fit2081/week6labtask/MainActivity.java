@@ -264,10 +264,8 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
                                     float newPrice = price+1;
 
                                     editor.putFloat (SP_PRICE,newPrice);
-
                                     editor.apply();
                                     bookPriceET.setText(df.format(newPrice));
-
                                 } else {
                                     // Left swipe
                                     // Task 1: Add a new Book to the database
