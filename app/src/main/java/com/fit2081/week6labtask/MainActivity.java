@@ -58,8 +58,8 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
     //ArrayList<Item> bookList = new ArrayList<>();
     ArrayList<Book> bookList = new ArrayList<>();
     //ArrayAdapter<String> adapter;
-    RecyclerView recyclerView;
-    RecyclerView.LayoutManager layoutManager;
+    //RecyclerView recyclerView;
+   // RecyclerView.LayoutManager layoutManager;
     static MyAdapter adapter;
     //private ListView myListView;
     private DrawerLayout drawerlayout;
@@ -233,8 +233,6 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
         view.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-
-
 
                 int action = event.getActionMasked();
 
