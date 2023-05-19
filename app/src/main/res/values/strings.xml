@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Week10LabTask</string>
+    <string name="app_name">Week11LabTask</string>
     <string name="navigation_drawer_open">Open</string>
     <string name="navigation_drawer_close">Close</string>
     <string name="title_activity_list_details">List of Books</string>

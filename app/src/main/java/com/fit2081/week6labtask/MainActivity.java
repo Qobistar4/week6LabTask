@@ -6,6 +6,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.view.GestureDetectorCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,6 +21,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.MotionEvent;
+import android.view.GestureDetector;
+import android.view.ScaleGestureDetector;
 import android.widget.EditText;
 import android.widget.Toast;
 import android.util.Log;
@@ -41,6 +44,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MainActivity extends AppCompatActivity  /*implements TokenizerInterface*/ {
 
@@ -71,12 +75,14 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
     float startX, startY, endX, endY;
     //float activityWidth;
     public static final int SWIPE_THRESHOLD = 200;
-    public static final int DIAGONAL_SWIPE_THRESHOLD = SWIPE_THRESHOLD * 2;
+    public static final int DIAGONAL_SWIPE_THRESHOLD = 400;
+    private GestureDetector gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.drawer_layout);
+        gestureDetector = new GestureDetector(this, new MyGestureListener());
         View view=findViewById(R.id.frame_layout_id);
         //activityWidth = getResources().getDisplayMetrics().widthPixels * 0.25f;
 
@@ -237,6 +243,9 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
         view.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if (gestureDetector.onTouchEvent(event)) {
+                    return true;
+                }
 
                 int action = event.getActionMasked();
 
@@ -256,19 +265,19 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
 
                         // Diagonal swipe from top-left to bottom-right
                         if(deltaX > 0 && deltaY > 0 && Math.abs(deltaX - deltaY) < DIAGONAL_SWIPE_THRESHOLD) {
-                            // Subtract one dollar from the book's price
-                            float price = Float.parseFloat(bookPriceET.getText().toString());
+                            // Extra Task: add one dollar from the book's price
+                            /*float price = Float.parseFloat(bookPriceET.getText().toString());
                             DecimalFormat df = new DecimalFormat(".00");
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             float newPrice = price+1;
 
                             editor.putFloat (SP_PRICE,newPrice);
                             editor.apply();
-                            bookPriceET.setText(df.format(newPrice));
+                            bookPriceET.setText(df.format(newPrice));*/
                         }
                         else if(Math.abs(deltaX) > Math.abs(deltaY)) {
                             // Horizontal swipe
-                            if(Math.abs(deltaX) > SWIPE_THRESHOLD) {
+                            /*if(Math.abs(deltaX) > SWIPE_THRESHOLD) {
                                 if(deltaX > 0) {
                                     // Right swipe
                                     // Task 2: Add one dollar to the book's price
@@ -310,10 +319,10 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
 
                                     adapter.notifyDataSetChanged();
                                 }
-                            }
+                            }*/
                         } else {
                             // Vertical swipe
-                            if(Math.abs(deltaY) > SWIPE_THRESHOLD) {
+                            /*if(Math.abs(deltaY) > SWIPE_THRESHOLD) {
                                 if(deltaY < 0) {
                                     // Up swipe
                                     // Task 3: Clear all the fields
@@ -324,7 +333,7 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
                                     bookDesET.setText("");
                                     bookPriceET.setText("");
                                 }
-                            }
+                            }*/
                         }
                         return true;
                     default :
@@ -332,8 +341,82 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
                 }
             }
         });
+    }
+    private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            // Generate new random ISBN
+            String newISBN = generateRandomISBN();
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(SP_ISBN,newISBN);
+            bookISBNET.setText(newISBN);
+            return true;
+        }
 
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            // Clear all fields
+            bookIDET.setText("");
+            bookNameET.setText("");
+            bookISBNET.setText("");
+            bookMakerET.setText("");
+            bookDesET.setText("");
+            bookPriceET.setText("");
+            return true;
+        }
 
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            float price = Float.parseFloat(bookPriceET.getText().toString());
+            if (e1.getX() < e2.getX()) {
+                // Scroll from left to right
+                price -= Math.abs(distanceX);
+            } else if (e2.getX() < e1.getX()) {
+                // Scroll from right to left
+                price += Math.abs(distanceX);
+            }
+            DecimalFormat df = new DecimalFormat(".00");
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+
+            editor.putFloat (SP_PRICE,price);
+            editor.apply();
+            bookPriceET.setText(df.format(price));
+            return true;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            if (Math.abs(velocityX) > 1000) {
+                moveTaskToBack(true);
+            }
+            return true;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            // Load default/saved values
+            String SPBookID = sharedPreferences.getString(SP_ID,"");
+            String SPBookName = sharedPreferences.getString(SP_NAME,"");
+            String SPBookISBN = sharedPreferences.getString(SP_ISBN,"");
+            String SPBookMaker = sharedPreferences.getString(SP_AUTHOR,"");
+            String SPBookDes = sharedPreferences.getString(SP_DESCRIPTION,"");
+            float SPBookPrice = sharedPreferences.getFloat(SP_PRICE,0);
+            DecimalFormat df = new DecimalFormat(".00");
+
+            bookIDET.setText(SPBookID);
+            bookNameET.setText(SPBookName);
+            bookISBNET.setText(SPBookISBN);
+            bookMakerET.setText(SPBookMaker);
+            bookDesET.setText(SPBookDes);
+            bookPriceET.setText(df.format(SPBookPrice));        }
+    }
+    private String generateRandomISBN() {
+            long min = 1_000_000_000_000L; // smallest 13-digit number
+            long max = 9_999_999_999_999L; // largest 13-digit number
+
+            long randomISBN = ThreadLocalRandom.current().nextLong(min, max + 1);
+
+            return String.valueOf(randomISBN);
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -464,10 +547,11 @@ public class MainActivity extends AppCompatActivity  /*implements TokenizerInter
 
             }
             else if (id == R.id.remove_last_book_menuNav_id) {
-
+                    //if (!bookList.isEmpty())
                     bookList.remove(bookList.size() -1);
                     bookViewModel.deleteLastBook();
                     adapter.notifyDataSetChanged();
+                    //else
 
             }
             else if (id == R.id.remove_all_books_menuNav_id) {
